@@ -15,27 +15,38 @@ void pose_graph_compression::callback(const nav_msgs::Path::ConstPtr& msg)
 {
   cout << "-------------------------------------" << endl;
   std_msgs::Int16MultiArray arr;
-  float x_float, y_float, z_float;
+  float x, y, z;
+  float x_last, y_last, z_last;
+  float xyz_distance;
   int x_short_int, y_short_int, z_short_int;
   int i = 0;
   for(vector<geometry_msgs::PoseStamped>::const_iterator it = msg->poses.begin(); it != msg->poses.end(); it++)
   {
-    x_float = msg->poses[i].pose.position.x;
-    y_float = msg->poses[i].pose.position.y;
-    z_float = msg->poses[i].pose.position.z;
+    x = msg->poses[i].pose.position.x;
+    y = msg->poses[i].pose.position.y;
+    z = msg->poses[i].pose.position.z;
+    xyz_distance  = (x - x_last) * (x - x_last)
+                  + (y - y_last) * (y - y_last)
+                  + (z - z_last) * (z - z_last);
+    if(xyz_distance > 25)
+    {
+      x_short_int = static_cast<short int>(20 * x);
+      y_short_int = static_cast<short int>(20 * y);
+      z_short_int = static_cast<short int>(20 * z);
+
+      arr.data.push_back(x_short_int);
+      arr.data.push_back(y_short_int);
+      arr.data.push_back(z_short_int);
+      x_last = x;
+      y_last = y;
+      z_last = z;
+    }
     
-    x_short_int = static_cast<short int>(20 * x_float);
-    y_short_int = static_cast<short int>(20 * y_float);
-    z_short_int = static_cast<short int>(20 * z_float);
-
-    arr.data.push_back(x_short_int);
-    arr.data.push_back(y_short_int);
-    arr.data.push_back(z_short_int);
-
     i++;
   }
-  cout << "ORIGINAL FLOAT:        [" << x_float << ", " << y_float << ", " << z_float << "]" << endl;
+  cout << "ORIGINAL FLOAT:        [" << x << ", " << y << ", " << z << "]" << endl;
   cout << "COMPRESSED SHORT INT:  [" << x_short_int << ", " << y_short_int << ", " << z_short_int << "]" << endl;
+  cout << "LAST                :  [" << x_last << ", " << y_last << ", " << z_last << "]" << endl;
   pub.publish(arr);
 }
 
