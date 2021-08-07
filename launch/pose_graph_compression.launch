@@ -1,0 +1,5 @@
+<?xml version="1.0"?>
+
+<launch>
+	<node pkg="pose_graph_compression" type="pose_graph_compression_node" name="pose_graph_compression_node" output="screen" />
+</launch>
