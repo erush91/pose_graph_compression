@@ -1,6 +1,9 @@
 #include <ros/ros.h>
 #include <tf/transform_listener.h>
 #include <tf/transform_datatypes.h>
+#include <geometry_msgs/TransformStamped.h>
+#include <tf2_ros/transform_listener.h>
+#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 #include <nav_msgs/Odometry.h>
 #include <geometry_msgs/Point.h>
 #include <geometry_msgs/PointStamped.h>
@@ -20,8 +23,11 @@ private:
   ros::NodeHandle* nh_;
   ros::Publisher pub;
   ros::Publisher pub2;
+  ros::Publisher pub_world;
   ros::Subscriber sub;
   ros::Subscriber sub2;
+  tf2_ros::Buffer tfBuffer;
+  tf2_ros::TransformListener* tfListenerPtr_ = new tf2_ros::TransformListener(tfBuffer);
 
 public:
   pose_graph_compression(ros::NodeHandle*);

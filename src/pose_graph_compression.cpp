@@ -7,12 +7,49 @@ pose_graph_compression::pose_graph_compression(ros::NodeHandle* nh)
 {
   pub = nh->advertise<std_msgs::Int16MultiArray>("/D01/pose_graph/compressed", 10);
   pub2 = nh->advertise<nav_msgs::Path>("/D01/pose_graph/uncompressed", 10);
+  pub_world = nh->advertise<nav_msgs::Path>("path_world", 10);
   sub = nh->subscribe<nav_msgs::Path>("/D01/lio_sam/mapping/path", 1, &pose_graph_compression::callback, this);
   sub2 = nh->subscribe<std_msgs::Int16MultiArray>("/D01/pose_graph/compressed", 1, &pose_graph_compression::callback2, this);
 }
 
 void pose_graph_compression::callback(const nav_msgs::Path::ConstPtr& msg)
 {
+
+
+
+  nav_msgs::Path pathMsgOut;
+  pathMsgOut.header.frame_id = "world";
+  pathMsgOut.header.stamp = ros::Time::now();
+  pathMsgOut.poses.resize(msg->poses.size());
+
+  if(pathMsgOut.poses.size() < 1)
+  {
+    pub_world.publish(pathMsgOut);
+    return;
+  }
+
+  geometry_msgs::TransformStamped pathInToOut;
+  try
+  {
+    pathInToOut = tfBuffer.lookupTransform(pathMsgOut.header.frame_id, msg->header.frame_id, ros::Time(0));
+  }
+  catch(tf2::TransformException &ex)
+	{
+		ROS_WARN("%s",ex.what());
+    return;
+	}
+
+  for(int i=0; i<pathMsgOut.poses.size(); i++)
+    tf2::doTransform (msg->poses[i].pose, pathMsgOut.poses[i].pose, pathInToOut);
+	
+	pub_world.publish(pathMsgOut);
+
+
+
+
+
+
+
   cout << "-------------------------------------" << endl;
   std_msgs::Int16MultiArray arr;
   float x, y, z;
